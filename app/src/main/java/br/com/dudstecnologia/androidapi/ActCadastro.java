@@ -2,6 +2,7 @@ package br.com.dudstecnologia.androidapi;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -15,9 +16,9 @@ import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Response;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+
+import br.com.dudstecnologia.androidapi.entidades.Usuario;
 
 public class ActCadastro extends AppCompatActivity {
 
@@ -60,30 +61,32 @@ public class ActCadastro extends AppCompatActivity {
                 //    Log.d("ANDROID API", "Senhas não conferem");
                 } else {
 
-//                    JsonObject dados = new JsonObject();
-//                    dados.addProperty("name", nome);
-//                    dados.addProperty("email", email);
-//                    dados.addProperty("password", senha);
-//                    dados.addProperty("password_confirmation", confirma);
-//
-//                    registro(dados);
-                    registro(nome, email, senha, confirma);
+                    JsonObject dados = new JsonObject();
+                    dados.addProperty("name", nome);
+                    dados.addProperty("email", email);
+                    dados.addProperty("password", senha);
+                    dados.addProperty("password_confirmation", confirma);
+
+                    registro(dados);
+                    // registro(nome, email, senha, confirma);
                 }
             }
         });
     }
 
-//    private void registro(JsonObject dados)
-    private void registro(String nome, String email, String senha, String confirma)
+    private void registro(JsonObject dados)
+    //private void registro(String nome, String email, String senha, String confirma)
     {
         Ion.with(ActCadastro.this)
             .load("http://192.168.1.20:8000/api/register")
             .setHeader("Accept", "application/json")
-            //.setJsonObjectBody(dados)
+            .setJsonObjectBody(dados)
+                /*
             .setBodyParameter("name", nome)
             .setBodyParameter("email", email)
             .setBodyParameter("password", senha)
             .setBodyParameter("password_confirmation", confirma)
+                 */
             .asJsonObject()
             .withResponse()
             .setCallback(new FutureCallback<Response<JsonObject>>() {
@@ -97,8 +100,20 @@ public class ActCadastro extends AppCompatActivity {
                         JsonObject retorno = result.getResult();
 
                         if(STATUS == 201) {
-                            Log.d("ANDROID_API", "STATUS 1 " + STATUS);
+                            // Log.d("ANDROID_API", "STATUS 1 " + STATUS);
                             // Log.d("ANDROID_API", result.getResult());
+                            Usuario usuario = new Usuario();
+                            usuario.setId(retorno.get("id").getAsInt());
+                            usuario.setName(retorno.get("name").getAsString());
+                            usuario.setEmail(retorno.get("email").getAsString());
+                            usuario.setToken(retorno.get("token").getAsString());
+
+                            AuthService authService = new AuthService(ActCadastro.this);
+                            authService.setAcesso(usuario);
+
+                            Intent abrePrincipal = new Intent(ActCadastro.this, ActPrincipal.class);
+                            startActivity(abrePrincipal);
+
                         } else {
                             // Log.d("ANDROID_API", "STATUS 2 " + STATUS);
                             // Log.d("ANDROID_API", result.getResult());
